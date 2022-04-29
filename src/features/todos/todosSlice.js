@@ -11,9 +11,18 @@ const initialState = [
 export const TodosSlice = createSlice({
   name: "todos",
   initialState,
-  reducers: {},
+  reducers: {
+    addTodo: (state, action) => {
+      const newTodo = {
+        id: Date.now,
+        title: action.payload.title,
+        completed: false,
+      };
+      state.push(newTodo);
+    },
+  },
 });
 
 // actions
-export const {} = TodosSlice.actions;
+export const { addTodo } = TodosSlice.actions;
 export default TodosSlice.reducer;
