@@ -15,7 +15,7 @@ export const getAsynkTodos = createAsyncThunk(
       const response = await axios.get("http://localhost:3001/todos");
       return response.data;
     } catch (error) {
-      return rejectWithValue([], error);
+      return rejectWithValue(error);
     }
   }
 );
@@ -37,33 +37,66 @@ export const addAsyncTodos = createAsyncThunk(
   }
 );
 
+export const toggleCompleteAsyncTodo = createAsyncThunk(
+  "todos/toggleCompleteAsyncTodo",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3001/todos/${payload.id}`,
+        {
+          id: payload.id,
+          title: payload.title,
+          completed: payload.completed,
+        }
+      );
+      // response.data => just have this new todo that we added
+      return response.data;
+    } catch (error) {
+      return rejectWithValue([], error);
+    }
+  }
+);
+
+export const deleteAsyncTodo = createAsyncThunk(
+  "todos/deleteAsyncTodo",
+  async (payload, { rejectWithValue }) => {
+    try {
+      await axios.delete(`http://localhost:3001/todos/${payload.id}`);
+      // response.data => just have this new todo that we added
+      return { id: payload.id };
+    } catch (error) {
+      return rejectWithValue([], error);
+    }
+  }
+);
+
 export const TodosSlice = createSlice({
   name: "todos",
   initialState,
   // sync reducers
-  reducers: {
-    addTodo: (state, action) => {
-      const newTodo = {
-        id: Date.now(),
-        title: action.payload.title,
-        completed: false,
-      };
-      state.todos.push(newTodo);
-    },
-    toggleCompleteTodo: (state, action) => {
-      const selectedTodo = state.todos.find(
-        (item) => item.id === action.payload.id
-      );
-      selectedTodo.completed = !selectedTodo.completed;
-    },
-    deleteTodo: (state, action) => {
-      const filteredTodos = state.todos.filter(
-        (item) => item.id !== action.payload.id
-      );
+  // reducers: {
+  //   addTodo: (state, action) => {
+  //     const newTodo = {
+  //       id: Date.now(),
+  //       title: action.payload.title,
+  //       completed: false,
+  //     };
+  //     state.todos.push(newTodo);
+  //   },
+  //   toggleCompleteTodo: (state, action) => {
+  //     const selectedTodo = state.todos.find(
+  //       (item) => item.id === action.payload.id
+  //     );
+  //     selectedTodo.completed = !selectedTodo.completed;
+  //   },
+  //   deleteTodo: (state, action) => {
+  //     const filteredTodos = state.todos.filter(
+  //       (item) => item.id !== action.payload.id
+  //     );
 
-      state.todos = filteredTodos;
-    },
-  },
+  //     state.todos = filteredTodos;
+  //   },
+  // },
   // async reducers
   extraReducers: {
     // 1: (fulfilled) => success
@@ -79,7 +112,7 @@ export const TodosSlice = createSlice({
       return {
         ...state,
         loading: false,
-        error: action.error.message,
+        error: action.payload.message,
         todos: [],
       };
     },
@@ -87,9 +120,23 @@ export const TodosSlice = createSlice({
     [addAsyncTodos.fulfilled]: (state, action) => {
       state.todos.push(action.payload);
     },
+    // get new data after update todo
+    [toggleCompleteAsyncTodo.fulfilled]: (state, action) => {
+      const selectedTodo = state.todos.find(
+        (item) => item.id === action.payload.id
+      );
+      selectedTodo.completed = action.payload.completed;
+    },
+    // get new data after delete todo
+    [deleteAsyncTodo.fulfilled]: (state, action) => {
+      const filteredTodos = state.todos.filter(
+        (item) => item.id !== action.payload.id
+      );
+      state.todos = filteredTodos;
+    },
   },
 });
 
-// actions
-export const { addTodo, toggleCompleteTodo, deleteTodo } = TodosSlice.actions;
+// sync actions
+// export const { addTodo, toggleCompleteTodo, deleteTodo } = TodosSlice.actions;
 export default TodosSlice.reducer;
