@@ -1,18 +1,29 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
 const initialState = {
-  todos: [
-    { id: 1, title: "todo1", completed: false },
-    { id: 2, title: "todo2", completed: true },
-    { id: 3, title: "todo3", completed: true },
-    { id: 4, title: "todo4", completed: false },
-    { id: 5, title: "todo5", completed: true },
-  ],
+  todos: [],
+  loading: false,
+  error: null,
 };
+
+// fetch data from DB
+export const getAsynkTodos = createAsyncThunk(
+  "todos/getAsynkTodos",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("http://localhost:3001/todos");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue([], error);
+    }
+  }
+);
 
 export const TodosSlice = createSlice({
   name: "todos",
   initialState,
+  // sync reducers
   reducers: {
     addTodo: (state, action) => {
       const newTodo = {
@@ -34,6 +45,26 @@ export const TodosSlice = createSlice({
       );
 
       state.todos = filteredTodos;
+    },
+  },
+  // async reducers
+  extraReducers: {
+    // 1: (fulfilled) => success
+    [getAsynkTodos.fulfilled]: (state, action) => {
+      return { ...state, loading: false, error: null, todos: action.payload };
+    },
+    // 2: (pending) => fetching data
+    [getAsynkTodos.pending]: (state, action) => {
+      return { ...state, loading: true, error: null, todos: [] };
+    },
+    // 3: (rejected) => error
+    [getAsynkTodos.rejected]: (state, action) => {
+      return {
+        ...state,
+        loading: false,
+        error: action.error.message,
+        todos: [],
+      };
     },
   },
 });
