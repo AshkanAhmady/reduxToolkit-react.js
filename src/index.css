@@ -10,3 +10,8 @@ body {
   display: flex;
   justify-content: center;
 }
+
+.App {
+  width: 50rem;
+  text-align: center;
+}
