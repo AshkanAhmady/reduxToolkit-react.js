@@ -20,9 +20,13 @@ export const TodosSlice = createSlice({
       };
       state.push(newTodo);
     },
+    toggleCompleteTodo: (state, action) => {
+      const selectedTodo = state.find((item) => item.id === action.payload.id);
+      selectedTodo.completed = !selectedTodo.completed;
+    },
   },
 });
 
 // actions
-export const { addTodo } = TodosSlice.actions;
+export const { addTodo, toggleCompleteTodo } = TodosSlice.actions;
 export default TodosSlice.reducer;
